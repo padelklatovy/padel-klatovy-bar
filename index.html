@@ -506,10 +506,13 @@ async function reloadData(){await loadData();renderHistory();renderAdmin();toast
 
 async function sync(action,data){
   try{
-    const payload=Object.assign({action:action},data);
-    const form=new FormData();
-    form.append('payload',JSON.stringify(payload));
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:form});
+    const body=JSON.stringify(Object.assign({action:action},data));
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:body
+    });
     setSyncStatus('ok','synchronizovano · '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){setSyncStatus('err','chyba zapisu');}
 }
