@@ -1,4 +1,75 @@
-<!DOCTYPE html>
+const DEFAULT_PRODUCTS = {
+  'Pivo': [
+    {name:'Prazdroj 12° čep. 0,33',  price:38,  emoji:'🍺'},
+    {name:'Prazdroj 12° čep. 0,5',   price:55,  emoji:'🍺'},
+    {name:'Prazdroj 12° sklo',        price:45,  emoji:'🍺'},
+    {name:'Bakalář sklo',             price:45,  emoji:'🍺'},
+    {name:'Pivo nealko classic',      price:45,  emoji:'🍺'},
+    {name:'Birel Pomelo Grep 0,3',    price:32,  emoji:'🍋'},
+    {name:'Birel Pomelo Grep 0,5',    price:45,  emoji:'🍋'},
+    {name:'Birel Nealko',             price:40,  emoji:'🍺'},
+    {name:'Guinness plech',           price:80,  emoji:'🍺'},
+    {name:'Guinness nealko plech',    price:80,  emoji:'🍺'},
+  ],
+  'Nealkoholické': [
+    {name:'Perlivá voda',             price:20,  emoji:'💧'},
+    {name:'Voda neperlivá',           price:25,  emoji:'💧'},
+    {name:'Coca Cola 0,33',           price:55,  emoji:'🥤'},
+    {name:'Fanta 0,33',               price:55,  emoji:'🥤'},
+    {name:'Sprite 0,33',              price:55,  emoji:'🥤'},
+    {name:'7Up plech',                price:55,  emoji:'🥤'},
+    {name:'Tonic 0,33',               price:55,  emoji:'🥤'},
+    {name:'Fuzetea',                  price:65,  emoji:'🍵'},
+    {name:'Magnesia plus',            price:55,  emoji:'💧'},
+    {name:'Nápoje Relax 0,3',         price:45,  emoji:'🥤'},
+    {name:'Juice Cappy multivitamin', price:40,  emoji:'🍊'},
+    {name:'Glacéau Vitamin Water',    price:50,  emoji:'💧'},
+    {name:'Dr.Witt power-C',          price:45,  emoji:'🥤'},
+    {name:'Dr.Witt Collagen',         price:45,  emoji:'🥤'},
+    {name:'Powerade golden mango',    price:70,  emoji:'⚡'},
+    {name:'Powerade mountain blast',  price:70,  emoji:'⚡'},
+  ],
+  'Káva': [
+    {name:'Espresso',                 price:55,  emoji:'☕'},
+    {name:'Espresso doppio',          price:79,  emoji:'☕'},
+    {name:'Espresso tonic',           price:79,  emoji:'☕'},
+    {name:'Lungo',                    price:55,  emoji:'☕'},
+    {name:'Cappuccino',               price:65,  emoji:'☕'},
+    {name:'Latte',                    price:69,  emoji:'☕'},
+    {name:'Flat white',               price:89,  emoji:'☕'},
+  ],
+  'Aperitiv & Míchané': [
+    {name:'Aperol Spritz',            price:70,  emoji:'🍊'},
+    {name:"Jack Daniel's & Coke",     price:99,  emoji:'🥃'},
+  ],
+  'Vilgain — Nápoje': [
+    {name:'Whey protein',             price:55,  emoji:'💪'},
+    {name:'Clear Whey Isolate',       price:55,  emoji:'💪'},
+    {name:'Protein Milkshake',        price:69,  emoji:'🥛'},
+    {name:'Protein iced coffee',      price:69,  emoji:'☕'},
+    {name:'Vilgain elektrolyt',       price:55,  emoji:'⚡'},
+    {name:'Energy & Focus drink',     price:55,  emoji:'⚡'},
+    {name:'Vilgain energy gel 40g',   price:55,  emoji:'⚡'},
+    {name:'Ion drink 40g',            price:45,  emoji:'⚡'},
+  ],
+  'Vilgain — Tyčinky': [
+    {name:'Energy bar 55g',           price:35,  emoji:'🍫'},
+    {name:'Oat bar',                  price:49,  emoji:'🌾'},
+    {name:'Protein energy bar',       price:45,  emoji:'💪'},
+    {name:'Trouble bar',              price:65,  emoji:'🍫'},
+    {name:'Nut butter cups',          price:55,  emoji:'🥜'},
+    {name:'Energy ball',              price:39,  emoji:'🟤'},
+  ],
+  'Pochutiny': [
+    {name:'Brambůrky',                price:40,  emoji:'🥔'},
+    {name:'Arašídy',                  price:20,  emoji:'🥜'},
+    {name:'Soletky',                  price:15,  emoji:'🥨'},
+    {name:'Tatranky',                 price:20,  emoji:'🍫'},
+    {name:'Mila',                     price:20,  emoji:'🍪'},
+    {name:'Vrták',                    price:7,   emoji:'🌀'},
+    {name:'Myši',                     price:5,   emoji:'🐭'},
+  ],
+};<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -547,10 +618,12 @@ async function loadData(){
     const data=await res.json();
     if(data.members&&data.members.length>0) members=data.members;
     if(data.products&&Object.keys(data.products).length>0) products=data.products;
+    else products=DEFAULT_PRODUCTS;
     transactions=data.transactions||[];
     setSyncStatus('ok','synchronizováno · '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}));
     renderMemberGrid();
   }catch(e){
+    products=DEFAULT_PRODUCTS;
     setSyncStatus('error','offline — data se neukládají');
     renderMemberGrid();
   }
