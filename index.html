@@ -124,6 +124,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .sel-name{font-size:13px;font-weight:600;color:#5dc98a;}
 .sel-debt{font-size:11px;color:var(--text2);font-family:var(--mono);}
 .cat-label{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin:14px 0 8px;}
+.prod-search{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--rs);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;margin-bottom:12px;flex-shrink:0;}
+.prod-search:focus{outline:none;border-color:var(--red);}
+.prod-search::placeholder{color:var(--text3);}
 .prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
 .prod-btn{background:var(--card);border:0.5px solid var(--border);border-radius:var(--rs);padding:12px 10px;cursor:pointer;text-align:left;transition:all 0.12s;display:flex;flex-direction:column;gap:3px;color:var(--text);}
 .prod-btn:hover{border-color:var(--green-dim);background:var(--bg3);}
@@ -759,7 +762,8 @@ function renderProducts(){
   let html=`<div class="sel-pill">
     <div class="sel-av" style="background:${c.bg};color:${c.text}">${ini(selectedMember.name)}</div>
     <div><div class="sel-name">${selectedMember.name}</div><div class="sel-debt">${(selectedMember.debt||0)>0?'Dluh: '+(selectedMember.debt||0)+' Kč':'Bez dluhu ✓'}</div></div>
-  </div>`;
+  </div>
+  <input class="prod-search" type="text" id="prod-search" placeholder="🔍  Hledat produkt…" oninput="filterProducts()" autocomplete="off">`;
   Object.entries(products).forEach(([cat,items])=>{
     html+=`<div class="cat-label">${cat}</div><div class="prod-grid">`;
     html+=items.map(p=>`<button class="prod-btn" onclick="addToCart('${p.name.replace(/'/g,"\\'")}',${p.price},'${p.emoji}')">
@@ -808,6 +812,44 @@ function repeatLast(){
     if(p)for(let i=0;i<qty;i++)addToCart(p.name,p.price,p.emoji);
   });
   renderCart();toast('↩ Opakuji poslední objednávku');
+}
+
+function filterProducts(){
+  const q = (document.getElementById('prod-search')?.value||'').toLowerCase().trim();
+  const container = document.getElementById('products-container');
+  if(!container) return;
+
+  // Show/hide product buttons based on search
+  const buttons = container.querySelectorAll('.prod-btn');
+  const catLabels = container.querySelectorAll('.cat-label');
+  const grids = container.querySelectorAll('.prod-grid');
+
+  if(!q){
+    // Show everything
+    buttons.forEach(b=>b.style.display='');
+    catLabels.forEach(l=>l.style.display='');
+    grids.forEach(g=>g.style.display='');
+    return;
+  }
+
+  // Hide all category labels and grids first
+  catLabels.forEach(l=>l.style.display='none');
+  grids.forEach(g=>g.style.display='none');
+
+  buttons.forEach(b=>{
+    const name = b.querySelector('.prod-name')?.textContent?.toLowerCase()||'';
+    const matches = name.includes(q);
+    b.style.display = matches ? '' : 'none';
+    if(matches){
+      // Show parent grid and its preceding label
+      const grid = b.closest('.prod-grid');
+      if(grid){
+        grid.style.display='';
+        let prev = grid.previousElementSibling;
+        if(prev && prev.classList.contains('cat-label')) prev.style.display='';
+      }
+    }
+  });
 }
 
 async function confirmOrder(){
