@@ -1150,19 +1150,13 @@ function showPaymentQR(){
   if(debt <= 0){ toast('Nemáš žádný dluh!'); return; }
 
   // Czech QR Platba format (Short payment descriptor - SPD)
-  const iban = 'CZ5503000000000250226176';
+  const iban = 'CZ4103000000000250226176';
   const amount = debt.toFixed(2);
   const msg = 'Padel Klatovy Bar - ' + selectedMember.name;
   const vs = ''; // variabilni symbol - volitelne
 
   // SPD string
-  const spd = [
-    'SPD*1.0',
-    'ACC:' + iban,
-    'AM:' + amount,
-    'CC:CZK',
-    'MSG:' + msg.substring(0, 60),
-  ].join('*');
+  const spd = 'SPD*1.0*ACC:' + iban + '*AM:' + amount + '*CC:CZK*MSG:' + msg.substring(0, 60);
 
   document.getElementById('payment-qr-info').innerHTML =
     '<strong style="color:var(--text);font-size:16px">' + debt + ' Kč</strong><br>' +
