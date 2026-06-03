@@ -874,6 +874,10 @@ function filterProducts(){
 
 async function confirmOrder(){
   if(!selectedMember||!cart.length)return;
+  const btn=document.getElementById('btn-confirm');
+  if(btn.classList.contains('loading')||btn.classList.contains('success'))return;
+  btn.classList.add('loading');
+  btn.textContent='⏳ Zapisuji…';
   const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const itemStr=cart.map(i=>`${i.emoji} ${i.name}${i.qty>1?' ×'+i.qty:''}`).join(', ');
   const note=document.getElementById('cart-note').value.trim();
@@ -884,6 +888,16 @@ async function confirmOrder(){
   const txId='t'+Date.now();
   transactions.unshift({id:txId,memberId:selectedMember.id,member:selectedMember.name,items:itemStr,note,amount:total,ts:tsL});
   await sync('transaction',{transactionId:txId,memberId:selectedMember.id,memberName:selectedMember.name,items:itemStr,note,amount:total,timestamp:ts});
+  // Show success on button
+  btn.classList.remove('loading');
+  btn.classList.add('success');
+  btn.textContent='✓ Zapsáno!';
+  setTimeout(()=>{
+    btn.classList.remove('success');
+    btn.textContent='✓ ZAPSAT NA ÚČET';
+    btn.disabled=true;
+  },1500);
+
   toast(`✓ ${selectedMember.nick||selectedMember.name} · ${total} Kč`);
   document.getElementById('cart-note').value='';
   cart=[];renderCart();
