@@ -242,6 +242,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
       <div class="mb-name" id="mb-name"></div>
       <div class="mb-debt" id="mb-debt"></div>
     </div>
+    <button id="mb-detail" onclick="showMyDebtDetail()" style="font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--bg3);cursor:pointer;padding:6px 10px;border:0.5px solid var(--border2);border-radius:6px;margin-right:6px;display:none">📋 Můj dluh</button>
     <button class="mb-pay" id="mb-pay" onclick="showPaymentQR()" style="font-family:var(--mono);font-size:11px;color:#fff;background:var(--red);cursor:pointer;padding:6px 10px;border:none;border-radius:6px;margin-right:6px;display:none">💳 Zaplatit</button>
     <button class="mb-logout" onclick="logout()">Odhlásit</button>
   </div>
@@ -371,6 +372,17 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     <div class="modal-actions" style="flex-direction:column;gap:8px">
       <button class="btn-primary" onclick="confirmPayment()" style="background:#1a7a35;width:100%">✓ Zaplatil jsem</button>
       <button class="btn-cancel" onclick="closeModal('modal-payment-qr')" style="width:100%">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DEBT DETAIL -->
+<div class="modal-overlay" id="modal-debt-detail">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title" id="debt-detail-title">Detail dluhu</div>
+    <div id="debt-detail-content" style="max-height:400px;overflow-y:auto;margin-bottom:14px"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-debt-detail')">Zavřít</button>
     </div>
   </div>
 </div>
@@ -684,6 +696,7 @@ function loginMember(m){
   const mbDebt = (m.debt||0);
   document.getElementById('mb-debt').textContent=mbDebt>0?'Dluh: '+mbDebt+' Kč':'Bez dluhu ✓';
   document.getElementById('mb-pay').style.display=mbDebt>0?'block':'none';
+  document.getElementById('mb-detail').style.display=mbDebt>0?'block':'none';
   document.getElementById('member-banner').classList.add('show');
   renderProducts();
   renderCart();
@@ -907,6 +920,7 @@ async function confirmOrder(){
   // Update banner
   document.getElementById('mb-debt').textContent=(m.debt||0)>0?'Dluh: '+(m.debt||0)+' Kč':'Bez dluhu ✓';
   document.getElementById('mb-pay').style.display=(m.debt||0)>0?'block':'none';
+  document.getElementById('mb-detail').style.display=(m.debt||0)>0?'block':'none';
 }
 
 function clearOrder(){
@@ -1002,26 +1016,15 @@ function renderAdmin(){
   const wd=[...members].filter(m=>(m.debt||0)>0).sort((a,b)=>b.debt-a.debt);
   document.getElementById('admin-debts').innerHTML=`<div class="section-hd"><div class="dot" style="background:var(--red)"></div>PŘEHLED DLUHŮ</div>`
     +(wd.map(m=>{const c=gc(m);const high=(m.debt||0)>=DEBT_DANGER;
-      // Get member's transactions
-      const mtx=transactions.filter(t=>t.memberId===m.id);
-      const txHtml=mtx.length>0?`<div style="margin-top:6px;padding-left:36px">${
-        mtx.map(t=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid var(--border);font-size:11px">
-          <span style="color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${t.items}</span>
-          <span style="font-family:var(--mono);color:var(--red);margin-left:8px;flex-shrink:0">${t.amount} Kc</span>
-          <span style="font-family:var(--mono);color:var(--text3);margin-left:8px;flex-shrink:0;font-size:10px">${t.ts}</span>
-        </div>`).join('')
-      }</div>`:'';
-      return`<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${ini(m.name)}</div>
-            <span style="font-size:13px;color:var(--text)">${m.name}${high?' ⚠️':''}</span>
-          </div>
-          <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${high?'var(--red)':'var(--amber)'}">${(m.debt||0).toLocaleString('cs')} Kc</div>
+      return`<div class="debt-row" style="cursor:pointer" onclick="showMemberDebtDetail('${m.id}')" title="Klikni pro detail">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${ini(m.name)}</div>
+          <span style="font-size:13px;color:var(--text)">${m.name}${high?' ⚠️':''}</span>
+          <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">→ detail</span>
         </div>
-        ${txHtml}
+        <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${high?'var(--red)':'var(--amber)'}">${(m.debt||0).toLocaleString('cs')} Kč</div>
       </div>`;
-    }).join(''))||'<p style="font-size:12px;color:var(--text3);font-family:var(--mono)">zadne dluhy 🎉</p>';
+    }).join(''))||'<p style="font-size:12px;color:var(--text3);font-family:var(--mono)">žádné dluhy 🎉</p>';
 
 }
 
@@ -1225,11 +1228,51 @@ async function confirmPayment(){
   // Update banner
   document.getElementById('mb-debt').textContent = 'Bez dluhu ✓';
   document.getElementById('mb-pay').style.display = 'none';
+  document.getElementById('mb-detail').style.display = 'none';
 
   closeModal('modal-payment-qr');
   renderMembers();
   renderAdmin();
   toast('✓ Platba ' + debt + ' Kc potvrzena');
+}
+
+function showMyDebtDetail(){
+  if(!selectedMember) return;
+  showMemberDebtDetail(selectedMember.id);
+}
+
+function showMemberDebtDetail(memberId){
+  const m=members.find(x=>x.id===memberId);
+  if(!m) return;
+  const c=gc(m);
+  const mtx=transactions.filter(t=>t.memberId===memberId);
+  const total=m.debt||0;
+
+  document.getElementById('debt-detail-title').innerHTML=
+    `<span style="display:flex;align-items:center;gap:10px">
+      <span style="width:36px;height:36px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">${ini(m.name)}</span>
+      ${m.name} — dluh ${total.toLocaleString('cs')} Kč
+    </span>`;
+
+  if(mtx.length===0){
+    document.getElementById('debt-detail-content').innerHTML=
+      '<p style="font-size:13px;color:var(--text3);font-family:var(--mono);padding:10px 0">žádné transakce</p>';
+  } else {
+    document.getElementById('debt-detail-content').innerHTML=
+      mtx.map(t=>`
+        <div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text);flex:1">${t.items}</span>
+            <span style="font-family:var(--mono);font-size:13px;color:var(--red);flex-shrink:0;font-weight:600">${t.amount} Kč</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px">${t.ts}</div>
+        </div>`).join('')
+      +'<div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:4px;border-top:1.5px solid var(--border2)">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text)">CELKEM</span>'
+      +'<span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--red)">'+total.toLocaleString('cs')+' Kč</span>'
+      +'</div>';
+  }
+  openModal('modal-debt-detail');
 }
 
 function exportCSV(){
