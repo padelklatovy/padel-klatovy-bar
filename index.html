@@ -595,6 +595,12 @@ function showTab(n){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('screen-'+n).classList.add('active');
   document.getElementById('tab-'+n).classList.add('active');
+  // Hide member banner when admin views history or admin screen
+  if(isAdmin && (n==='history'||n==='admin')){
+    document.getElementById('member-banner').classList.remove('show');
+  } else if(selectedMember && !isAdmin){
+    document.getElementById('member-banner').classList.add('show');
+  }
   if(n==='history')renderHistory();
   if(n==='admin')renderAdmin();
 }
@@ -634,6 +640,7 @@ async function pinPress(d){
           document.getElementById('admin-btn').textContent='✓ ADMIN';
           document.getElementById('admin-btn').style.borderColor='var(--green)';
           document.getElementById('admin-btn').style.color='var(--green)';
+          document.getElementById('member-banner').classList.remove('show');
           const overlay=document.getElementById('pin-overlay');
           overlay.classList.remove('show');
           overlay.style.display='none';
